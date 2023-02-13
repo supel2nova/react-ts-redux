@@ -17,12 +17,18 @@ import {
 
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { loginFormInput } from "../app-types/login-form-input.types";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { loginThunk } from "../redux-toolkit/auth/auth-slice";
+import { LoginResponse } from "../app-types/login.type";
+import { LoginFormInput } from "../app-types/login-form-input.types";
+import { LoginErrorResponse } from "../app-types/login.type";
+import { useAppDispatch } from "../redux-toolkit/hooks";
 
 const LoginPage = () => {
   const toast = useToast();
+  const dispatch = useAppDispatch();
+
   const schema = yup.object().shape({
     email: yup
       .string()
@@ -39,21 +45,36 @@ const LoginPage = () => {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<loginFormInput>({
+  } = useForm<LoginFormInput>({
     resolver: yupResolver(schema),
     mode: "onChange",
   });
-  const onSubmit: SubmitHandler<loginFormInput> = (data) => 
-  toast({
-    title: "Done!!",
-    description: JSON.stringify(data),
-    status: "success",
-    duration: 9000,
-    isClosable: true,
-    position:"top-right"
-  })
 
-  
+  const onSubmit = async (data: LoginFormInput) => {
+    try {
+      const result = await dispatch(loginThunk(data)).unwrap();
+      console.log(result.access_token);
+    } catch (error: any) {
+      let err: LoginErrorResponse = error;
+      toast({
+        title: "Failed",
+        description: err.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+    }
+    toast({
+      title: "Done!!",
+      description: JSON.stringify(data),
+      status: "success",
+      duration: 9000,
+      isClosable: true,
+      position: "top-right",
+    });
+  };
+
   const navigate = useNavigate();
 
   return (

@@ -1,4 +1,4 @@
-export interface loginFormInput {
+export interface LoginFormInput {
   email: string;
   password: string;
 }
